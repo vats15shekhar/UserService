@@ -1,6 +1,7 @@
 package dev.vatsala.UserService.model;
 
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.ManyToOne;
 import lombok.Getter;
@@ -20,7 +21,7 @@ public class Session extends BaseModel{
     @ManyToOne
     private Users user;
 
-    @Enumerated
+    @Enumerated(EnumType.STRING)
     private SessionStatus sessionStatus;
 
 }

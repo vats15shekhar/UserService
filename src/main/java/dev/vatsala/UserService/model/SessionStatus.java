@@ -1,7 +1,7 @@
 package dev.vatsala.UserService.model;
 
-public enum SessionStatus {
 
+public enum SessionStatus {
     ACTIVE,
     ENDED,
 }
