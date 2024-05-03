@@ -13,6 +13,7 @@ import lombok.Setter;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.springframework.context.annotation.Bean;
@@ -34,19 +35,23 @@ public class AuthService {
 
     UserRepository userRepository;
     SessionRepository sessionRepository;
+    BCryptPasswordEncoder bCryptPasswordEncoder;
 
-    public AuthService(UserRepository userRepository, SessionRepository sessionRepository)
+    public AuthService(UserRepository userRepository, SessionRepository sessionRepository, BCryptPasswordEncoder bCryptPasswordEncoder)
     {
         this.userRepository = userRepository;
         this.sessionRepository = sessionRepository;
+        this.bCryptPasswordEncoder = bCryptPasswordEncoder;
     }
 
     public ResponseEntity<UserDTO> signup(String email, String password)
     {
         Users user = new Users();
         user.setEmail(email);
-        user.setPassword(password);
+        // Now we are setting the password in the encoded form using the Bcrypt Password Encoder
+        // We need the Spring Security dependency in order to use the Bcrypt password encoder
 
+        user.setPassword(bCryptPasswordEncoder.encode(password));
         userRepository.save(user);
 
         return ResponseEntity.ok(UserDTO.from(user));
@@ -64,9 +69,16 @@ public class AuthService {
         Users user = userOptional.get();
 
         // verify the password
-        if (!user.getPassword().equals(password)) {
-           throw new InvalidCredentialException("User password is incorrect");
+        // Setting the password and checking using bcryptPasswordEncoder
+
+        // We compare the password passed from the UI at the time of login, and the password saved by in the database at the time of signup
+        if (! bCryptPasswordEncoder.matches(user.getPassword(), password)) {
+            throw new InvalidCredentialException("User password is incorrect");
         }
+
+        /*  if (!user.getPassword().equals(password)) {
+           throw new InvalidCredentialException("User password is incorrect");
+        }*/
 
         // Generate a random token
         String token = RandomStringUtils.randomAlphanumeric(30);
@@ -84,7 +96,7 @@ public class AuthService {
       //  headers.put(HttpHeaders.SET_COOKIE, token);
 
         MultiValueMapAdapter<String, String> headers = new MultiValueMapAdapter<>(new HashMap<>());
-        headers.add(HttpHeaders.SET_COOKIE, "auth-token:" + token);
+        headers.addAll(HttpHeaders.SET_COOKIE, Collections.singletonList("auth-token:" + token));
 
         ResponseEntity<UserDTO> response = new ResponseEntity<>(userDto, headers, HttpStatus.OK);
         response.getHeaders().add(HttpHeaders.SET_COOKIE, token);
@@ -100,11 +112,8 @@ public class AuthService {
         }
 
         Session session = sessionOptional.get();
-
         session.setSessionStatus(SessionStatus.ENDED);
-
         sessionRepository.save(session);
-
         return ResponseEntity.ok().build();
     }
 
