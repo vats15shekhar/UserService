@@ -3,10 +3,11 @@ package dev.vatsala.UserService.controller;
 import dev.vatsala.UserService.dto.*;
 import dev.vatsala.UserService.model.Session;
 import dev.vatsala.UserService.model.SessionStatus;
+import dev.vatsala.UserService.model.Users;
 import dev.vatsala.UserService.service.AuthService;
-import org.apache.coyote.Response;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -16,9 +17,11 @@ import java.util.List;
 public class AuthController {
 
     AuthService authService;
+
     public AuthController(AuthService authService)
     {
         this.authService = authService;
+
     }
 
     @PostMapping("/signup")
@@ -49,9 +52,13 @@ public class AuthController {
 
     //below APIs are only for learning purposes, should not be present in actual systems
     @GetMapping("/session")
-    public ResponseEntity<List<Session>> getAllSessions()
-    {
-            return authService.getAllSessions();
+    public ResponseEntity<List<Session>> getAllSession(){
+        return authService.getAllSessions();
+    }
+
+    @GetMapping("/users")
+    public ResponseEntity<List<Users>> getAllUsers(){
+        return authService.getAllUsers();
     }
 
 

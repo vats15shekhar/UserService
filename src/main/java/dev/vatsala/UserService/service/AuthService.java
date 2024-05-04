@@ -8,6 +8,8 @@ import dev.vatsala.UserService.model.SessionStatus;
 import dev.vatsala.UserService.model.Users;
 import dev.vatsala.UserService.repository.SessionRepository;
 import dev.vatsala.UserService.repository.UserRepository;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.security.MacAlgorithm;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.http.HttpHeaders;
@@ -26,6 +28,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;*/
 import org.springframework.util.MultiValueMapAdapter;
 import org.springframework.http.ResponseCookie;
 
+import javax.crypto.SecretKey;
+import java.time.LocalDate;
 import java.util.*;
 
 @Service
@@ -72,16 +76,38 @@ public class AuthService {
         // Setting the password and checking using bcryptPasswordEncoder
 
         // We compare the password passed from the UI at the time of login, and the password saved by in the database at the time of signup
-        if (! bCryptPasswordEncoder.matches(user.getPassword(), password)) {
+     /*   if (! bCryptPasswordEncoder.matches(user.getPassword(), password)) {
             throw new InvalidCredentialException("User password is incorrect");
-        }
+        }*/
 
         /*  if (!user.getPassword().equals(password)) {
            throw new InvalidCredentialException("User password is incorrect");
         }*/
 
         // Generate a random token
+        /*
+        We do not want to generate tokens as random numbers. We will now see how jwt tokens are created
         String token = RandomStringUtils.randomAlphanumeric(30);
+         */
+
+
+        MacAlgorithm alg = Jwts.SIG.HS256; // HS256 algo added for JWT
+        SecretKey key = alg.key().build(); // generating the secret key
+
+        //start adding the claims. These are the data that we want to pass as a part of JWT tokens
+        //so that the Resource Server does not have to hit the Auth Server again to check the roles of the users, expiry time and other info
+        Map<String, Object> jsonForJWT = new HashMap<>();
+        jsonForJWT.put("email", user.getEmail());
+        jsonForJWT.put("roles", user.getRoles());
+        jsonForJWT.put("createdAt", new Date());
+        jsonForJWT.put("expiryAt", new Date(LocalDate.now().plusDays(3).toEpochDay()));
+
+        // In this part we are building the token
+        String token = Jwts.builder()
+                .claims(jsonForJWT) // added the claims
+                .signWith(key, alg) // added the algo and key
+                .compact(); //building the token
+
 
         //Create a new session
         Session session = new Session();
@@ -132,6 +158,10 @@ public class AuthService {
 
         List<Session> session = sessionRepository.findAll();
         return ResponseEntity.ok(session);
+    }
+
+    public ResponseEntity<List<Users>> getAllUsers(){
+        return ResponseEntity.ok(userRepository.findAll());
     }
 
 
