@@ -38,9 +38,14 @@ public class AuthController {
         return ResponseEntity.ok(userDTO);
     }
 
-    @PostMapping("/logout")
+ /*   @PostMapping("/logout")
     public ResponseEntity<Void> logout(@RequestBody LogoutRequestDTO request) {
         return authService.logout(request.getToken(), request.getUserId());
+    }*/
+
+    @PostMapping("/logout/{id}")
+    public ResponseEntity<Void> logout(@PathVariable("id") Long userId, @RequestHeader("token") String token) {
+        return authService.logout(token, userId);
     }
 
     @PostMapping("/validate")

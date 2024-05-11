@@ -2,6 +2,7 @@ package dev.vatsala.UserService.service;
 
 import dev.vatsala.UserService.dto.UserDTO;
 import dev.vatsala.UserService.exception.InvalidCredentialException;
+import dev.vatsala.UserService.exception.InvalidTokenException;
 import dev.vatsala.UserService.exception.UserNotFoundException;
 import dev.vatsala.UserService.model.Session;
 import dev.vatsala.UserService.model.SessionStatus;
@@ -122,19 +123,22 @@ public class AuthService {
       //  headers.put(HttpHeaders.SET_COOKIE, token);
 
         MultiValueMapAdapter<String, String> headers = new MultiValueMapAdapter<>(new HashMap<>());
-        headers.addAll(HttpHeaders.SET_COOKIE, Collections.singletonList("auth-token:" + token));
+       // headers.addAll(HttpHeaders.SET_COOKIE, Collections.singletonList("auth-token:" + token));
 
-        ResponseEntity<UserDTO> response = new ResponseEntity<>(userDto, headers, HttpStatus.OK);
-        response.getHeaders().add(HttpHeaders.SET_COOKIE, token);
+      /*  ResponseEntity<UserDTO> response = new ResponseEntity<>(userDto, headers, HttpStatus.OK);
+        response.getHeaders().add(HttpHeaders.SET_COOKIE, token);*/
 
-        return response;
+        headers.add(HttpHeaders.SET_COOKIE, token);
+        return new ResponseEntity<>(userDto, headers, HttpStatus.OK);
     }
 
     public ResponseEntity<Void> logout(String token, Long userId) {
+
+        // validations -> token exists, token is not expired, user exists else throw an exception
         Optional<Session> sessionOptional = sessionRepository.findByTokenAndUser_Id(token, userId);
 
         if (sessionOptional.isEmpty()) {
-            return null;
+            return null; // Write an exception to handle this situation
         }
 
         Session session = sessionOptional.get();
@@ -146,8 +150,9 @@ public class AuthService {
     public SessionStatus validate(String token, Long userId) {
         Optional<Session> sessionOptional = sessionRepository.findByTokenAndUser_Id(token, userId);
 
-        if (sessionOptional.isEmpty()) {
-            return null;
+        //verifying from DB if session exists
+        if (sessionOptional.isEmpty() || sessionOptional.get().getSessionStatus().equals(SessionStatus.ENDED)) {
+            throw new InvalidTokenException("token is invalid");
         }
 
         return SessionStatus.ACTIVE;
