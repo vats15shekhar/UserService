@@ -64,7 +64,6 @@
 			<version>0.12.3</version>
 			<scope>runtime</scope>
 		</dependency>
-
 		<!-- jackson is conversion of json to objects and vice versa-->
 		<dependency>
 			<groupId>io.jsonwebtoken</groupId>
@@ -72,6 +71,18 @@
 			<version>0.12.3</version>
 			<scope>runtime</scope>
 		</dependency>
+
+		<dependency>
+			<groupId>com.h2database</groupId>
+			<artifactId>h2</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>org.flywaydb</groupId>
+			<artifactId>flyway-mysql</artifactId>
+			<version>9.22.2</version>
+		</dependency>
+
 	</dependencies>
 
 	<build>
@@ -86,6 +97,18 @@
 							<artifactId>lombok</artifactId>
 						</exclude>
 					</excludes>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.flywaydb</groupId>
+				<artifactId>flyway-maven-plugin</artifactId>
+				<version>10.7.1</version>
+				<configuration>
+					<user>postgres</user>
+					<password>vatsala</password>
+					<schemas>
+						<schema>postgres</schema>
+					</schemas>
 				</configuration>
 			</plugin>
 		</plugins>
